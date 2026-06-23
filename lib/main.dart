@@ -10,16 +10,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   await SupabaseService.initialize();
-  runApp(const BookMoryApp());
+  runApp(const ShelfApp());
 }
 
-class BookMoryApp extends StatelessWidget {
-  const BookMoryApp({super.key});
+class ShelfApp extends StatelessWidget {
+  const ShelfApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BookMory Clone',
+      title: 'Shelf',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: const AuthGate(),

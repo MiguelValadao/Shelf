@@ -56,7 +56,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const Icon(Icons.menu_book_rounded, size: 72, color: Color(0xFF5B4636)),
                 const SizedBox(height: 16),
                 Text(
-                  'BookMory',
+                  'Shelf',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

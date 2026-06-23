@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routers import books
 
 app = FastAPI(
-    title="BookMory Clone - ISBN Lookup Service",
+    title="Shelf Clone - ISBN Lookup Service",
     description=(
         "Microserviço responsável apenas pela consulta de dados de livros "
         "por ISBN (Google Books / Open Library), com cache no Supabase. "

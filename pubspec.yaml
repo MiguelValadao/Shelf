@@ -1,4 +1,4 @@
-name: bookmory_clone
+name: shelf_app
 description: App de gestão de biblioteca pessoal com scanner de ISBN e quotes via OCR.
 publish_to: 'none'
 version: 1.0.0+1
