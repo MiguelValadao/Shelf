@@ -12,6 +12,13 @@ Structure
 
 [] Add possibility to add a book cover after adding to the DB
 
+[] Add a crop/area-selection step before OCR, so the user can focus on a specific excerpt when the photo has extra text around it.
+
+[] Add a title/author search screen for the shelf (a GIN index on books.title is already in place for this).
+Add pagination/infinite scroll to the shelf as the library grows.
+
+[] Add dark mode reusing the same ColorScheme.fromSeed.
+
 AI
 
 [] Implement main AI (Generative chatbot)
