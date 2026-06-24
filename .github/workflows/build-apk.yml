@@ -18,6 +18,9 @@ jobs:
         with:
           flutter-version: "3.x"
 
+      - name: Create .env
+        run: echo "${{ secrets.ENV_FILE }}" > .env
+
       - name: Install dependencies
         run: flutter pub get
 
