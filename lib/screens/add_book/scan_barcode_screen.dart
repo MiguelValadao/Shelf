@@ -108,7 +108,7 @@ class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
                 ],
               ),
             ),
-          Positioned(
+          const Positioned(
             bottom: 24,
             left: 24,
             right: 24,
