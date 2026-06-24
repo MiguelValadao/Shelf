@@ -1,10 +1,14 @@
-Tasks
+# Tasks
 
-[] TODO
-[~] Working on it 
-[x] Done
+**[] TODO**
 
-Structure
+**[~] Working on it**
+
+**[x] Done**
+
+---
+
+**Structure**
 
 [] Fix issues with ISBN request from Google books API
 
@@ -19,9 +23,13 @@ Add pagination/infinite scroll to the shelf as the library grows.
 
 [] Add dark mode reusing the same ColorScheme.fromSeed.
 
-AI
+[] Change app icon model
 
-[] Implement main AI (Generative chatbot)
+---
+
+**AI**
+
+[] Implement main AI (Generative chatbot || Possibly Grok or Gemini) 
 
 [] Fix user request issues and possible exceptions
 
