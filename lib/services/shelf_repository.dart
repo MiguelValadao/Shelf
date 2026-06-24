@@ -71,6 +71,10 @@ class ShelfRepository {
     return userBookRow['id'] as String;
   }
 
+  Future<void> updateBook(String bookId, Book book) async {
+    await _client.from('books').update(book.toJson()).eq('id', bookId);
+  }
+
   Future<void> updateStatus(String userBookId, ReadingStatus status) async {
     await _client
         .from('user_books')

@@ -13,16 +13,12 @@ class _IsbnSearchScreenState extends State<IsbnSearchScreen> {
   final _isbnController = TextEditingController();
   final _isbnLookupService = IsbnLookupService();
   bool _isLoading = false;
-  String? _errorMessage;
 
   Future<void> _search() async {
     final isbn = _isbnController.text.trim();
     if (isbn.isEmpty) return;
 
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       final book = await _isbnLookupService.lookup(isbn);
@@ -31,10 +27,27 @@ class _IsbnSearchScreenState extends State<IsbnSearchScreen> {
         MaterialPageRoute(builder: (_) => ManualFormScreen(prefill: book)),
       );
     } catch (e) {
-      setState(() => _errorMessage = e.toString());
+      if (!mounted) return;
+      _showErrorModal();
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showErrorModal() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Atenção'),
+        content: const Text('Não foi possível encontrar o livro desejado.\nTente adicionar manualmente.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -56,10 +69,6 @@ class _IsbnSearchScreenState extends State<IsbnSearchScreen> {
               ),
               onSubmitted: (_) => _search(),
             ),
-            if (_errorMessage != null) ...[
-              const SizedBox(height: 12),
-              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-            ],
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _isLoading ? null : _search,

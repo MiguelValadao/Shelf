@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_repository.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -15,13 +16,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isLogin = true;
   bool _isLoading = false;
-  String? _errorMessage;
 
   Future<void> _submit() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
+    setState(() => _isLoading = true);
 
     try {
       if (_isLogin) {
@@ -35,12 +32,37 @@ class _LoginScreenState extends State<LoginScreen> {
           _passwordController.text,
         );
       }
-      // O AuthGate no main.dart reage automaticamente via authStateChanges
     } catch (e) {
-      setState(() => _errorMessage = 'Erro: ${e.toString()}');
+      if (!mounted) return;
+      if (_isLogin) {
+        final isNotFound = e is AuthApiException && e.code == 'user_not_found';
+        _showErrorModal(
+          isNotFound
+              ? 'Conta não encontrada.\nCrie uma conta para prosseguir.'
+              : 'Email ou senha Incorretos',
+        );
+      } else {
+        _showErrorModal('Erro ao criar conta. Tente novamente.');
+      }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  void _showErrorModal(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Atenção'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -84,10 +106,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     prefixIcon: Icon(Icons.lock_outline),
                   ),
                 ),
-                if (_errorMessage != null) ...[
-                  const SizedBox(height: 12),
-                  Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                ],
                 const SizedBox(height: 24),
                 SizedBox(
                   width: double.infinity,

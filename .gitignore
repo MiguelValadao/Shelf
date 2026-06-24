@@ -54,3 +54,5 @@ build/
 *.iml
 *.lock
 *.log
+
+.metadata/

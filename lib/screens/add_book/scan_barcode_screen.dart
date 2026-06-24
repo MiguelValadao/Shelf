@@ -43,12 +43,26 @@ class _ScanBarcodeScreenState extends State<ScanBarcodeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      await _showErrorModal();
       await _controller.start();
       setState(() => _isProcessing = false);
     }
+  }
+
+  Future<void> _showErrorModal() {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Atenção'),
+        content: const Text('Não foi possível encontrar o livro desejado.\nTente adicionar manualmente.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

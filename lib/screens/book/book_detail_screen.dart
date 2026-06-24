@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../../models/quote.dart';
 import '../../models/user_book.dart';
 import '../../services/shelf_repository.dart';
+import '../add_book/manual_form_screen.dart';
 import 'add_quote_screen.dart';
 
 class BookDetailScreen extends StatefulWidget {
@@ -36,10 +37,35 @@ class _BookDetailScreenState extends State<BookDetailScreen> {
     await Future.wait([_userBookFuture, _quotesFuture]);
   }
 
+  Future<void> _editBook(BuildContext context) async {
+    try {
+      final userBook = await _userBookFuture;
+      if (!context.mounted) return;
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ManualFormScreen(
+            prefill: userBook.book,
+            editingBookId: userBook.book.id,
+          ),
+        ),
+      );
+      _refresh();
+    } catch (_) {}
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalhes do livro')),
+      appBar: AppBar(
+        title: const Text('Detalhes do livro'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.edit_outlined),
+            tooltip: 'Editar',
+            onPressed: () => _editBook(context),
+          ),
+        ],
+      ),
       body: FutureBuilder<UserBook>(
         future: _userBookFuture,
         builder: (context, snapshot) {

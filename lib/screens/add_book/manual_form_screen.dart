@@ -4,11 +4,15 @@ import '../../models/user_book.dart';
 import '../../services/shelf_repository.dart';
 
 /// Tela compartilhada: usada tanto para o cadastro 100% manual quanto
-/// para confirmar/editar os dados que vieram do scanner/busca por ISBN.
+/// para confirmar/editar os dados que vieram do scanner/busca por ISBN
+/// e para editar dados de um livro já existente.
 class ManualFormScreen extends StatefulWidget {
   final Book? prefill;
+  final String? editingBookId;
 
-  const ManualFormScreen({super.key, this.prefill});
+  const ManualFormScreen({super.key, this.prefill, this.editingBookId});
+
+  bool get isEditing => editingBookId != null;
 
   @override
   State<ManualFormScreen> createState() => _ManualFormScreenState();
@@ -27,23 +31,31 @@ class _ManualFormScreenState extends State<ManualFormScreen> {
       TextEditingController(text: widget.prefill?.pageCount?.toString());
   late final _coverUrlController = TextEditingController(text: widget.prefill?.coverUrl);
 
-  ReadingStatus _status = ReadingStatus.toRead;
   bool _isSaving = false;
 
   @override
-  Widget build(BuildContext context) {
-    final isConfirmation = widget.prefill != null;
+  void dispose() {
+    _titleController.dispose();
+    _authorsController.dispose();
+    _isbnController.dispose();
+    _publisherController.dispose();
+    _pageCountController.dispose();
+    _coverUrlController.dispose();
+    super.dispose();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isConfirmation ? 'Confirme os dados' : 'Cadastro manual'),
+        title: Text(widget.isEditing ? 'Editar livro' : 'Cadastro manual'),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            if (isConfirmation)
+            if (widget.prefill != null && !widget.isEditing)
               Padding(
                 padding: const EdgeInsets.only(bottom: 16),
                 child: Text(
@@ -84,16 +96,7 @@ class _ManualFormScreenState extends State<ManualFormScreen> {
             const SizedBox(height: 12),
             TextFormField(
               controller: _coverUrlController,
-              decoration: const InputDecoration(labelText: 'URL da capa (opcional)'),
-            ),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<ReadingStatus>(
-              value: _status,
-              decoration: const InputDecoration(labelText: 'Status'),
-              items: ReadingStatus.values
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))
-                  .toList(),
-              onChanged: (value) => setState(() => _status = value ?? ReadingStatus.toRead),
+              decoration: const InputDecoration(labelText: 'URL da capa'),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -103,7 +106,7 @@ class _ManualFormScreenState extends State<ManualFormScreen> {
                       height: 20, width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
-                  : const Text('Salvar na estante'),
+                  : Text(widget.isEditing ? 'Salvar alterações' : 'Salvar na estante'),
             ),
           ],
         ),
@@ -130,10 +133,18 @@ class _ManualFormScreenState extends State<ManualFormScreen> {
         source: widget.prefill?.source ?? 'manual',
       );
 
-      await _shelfRepository.addBookToShelf(book: book, status: _status);
+      if (widget.isEditing) {
+        await _shelfRepository.updateBook(widget.editingBookId!, book);
+      } else {
+        await _shelfRepository.addBookToShelf(book: book, status: ReadingStatus.toRead);
+      }
 
       if (mounted) {
-        Navigator.of(context).popUntil((route) => route.isFirst);
+        if (widget.isEditing) {
+          Navigator.of(context).pop();
+        } else {
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        }
       }
     } catch (e) {
       if (mounted) {
