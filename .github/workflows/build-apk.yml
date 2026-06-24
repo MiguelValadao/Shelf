@@ -18,15 +18,6 @@ jobs:
         with:
           flutter-version: "3.x"
 
-      - name: Create .env file
-        run: |
-          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
-          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
-          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> .env
-          echo "BACKEND_BASE_URL=${{ secrets.BACKEND_BASE_URL }}" >> .env
-          echo "GOOGLE_BOOKS_API_KEY=${{ secrets.GOOGLE_BOOKS_API_KEY }}" >> .env
-          echo "ENVIRONMENT=development" >> .env
-
       - name: Install dependencies
         run: flutter pub get
 
@@ -34,10 +25,11 @@ jobs:
         run: flutter analyze
 
       - name: Build APK
-        run: flutter build apk --debug
+        run: flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
           path: build/app/outputs/flutter-apk/*.apk
+          retention-days: 7
