@@ -12,7 +12,7 @@
 
 [] Fix issues with ISBN request from Google books API
 
-[] Add modal instead of red letters in any exception for better UX
+[x] Add modal instead of red letters in any exception for better UX
 
 [] Add possibility to add a book cover after adding to the DB
 
