@@ -29,6 +29,8 @@ Add pagination/infinite scroll to the shelf as the library grows.
 
 [] Fix ISBN request and barcode reading 
 
+[] Change API request for ISBN from Google books to OpenLibrary
+
 ---
 
 **AI**
