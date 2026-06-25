@@ -25,6 +25,12 @@ Add pagination/infinite scroll to the shelf as the library grows.
 
 [] Change app icon model
 
+[] Add book cover image from camera or phone's photo library 
+
+[] Fix ISBN request and barcode reading 
+
+[] Change API request for ISBN from Google books to OpenLibrary
+
 ---
 
 **AI**
