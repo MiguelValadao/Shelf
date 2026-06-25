@@ -12,7 +12,7 @@ flutter_app/  -> Flutter app. Talks DIRECTLY to Supabase (full CRUD:
 
 backend/      -> Python microservice (FastAPI) with a SINGLE
                  responsibility: looking up book data by ISBN
-                 (Google Books -> Open Library fallback), caching the
+                  (Open Library), caching the
                  result in the `books` table using the service_role key.
 
 supabase/     -> schema.sql with all tables, the `shelf_view` view, and
@@ -24,8 +24,7 @@ Why split it this way? Simple CRUD operations (adding a book to the
 shelf, updating the current page, saving a quote) don't need any
 business logic — Supabase with RLS already guarantees each user only
 accesses their own data. Python only comes in where it actually
-matters: calling external APIs and keeping the service_role key (and
-an optional Google Books API key) out of the client app.
+matters: calling external APIs and keeping the service_role key out of the client app.
 
 ## 1. Set up Supabase
 
@@ -50,7 +49,6 @@ pip install -r requirements.txt
 
 cp .env.example .env
 # edit .env with SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-# and, optionally, GOOGLE_BOOKS_API_KEY (raises the rate limit)
 
 uvicorn app.main:app --reload --port 8000
 ```

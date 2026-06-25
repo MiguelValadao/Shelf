@@ -11,5 +11,6 @@ class BookLookupResult(BaseModel):
     page_count: Optional[int] = None
     cover_url: Optional[str] = None
     description: Optional[str] = None
-    source: str  # "google_books" | "open_library" | "cache"
+    source: str  # "open_library" | "cache"
     found: bool = True
+    error_message: Optional[str] = None

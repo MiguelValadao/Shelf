@@ -1,11 +1,13 @@
+import logging
+
 import httpx
 from typing import Optional
 
-from app.config import settings
 from app.models import BookLookupResult
 from app.supabase_client import get_supabase_client
 
-GOOGLE_BOOKS_URL = "https://www.googleapis.com/books/v1/volumes"
+logger = logging.getLogger(__name__)
+
 OPEN_LIBRARY_URL = "https://openlibrary.org/isbn/{isbn}.json"
 OPEN_LIBRARY_AUTHOR_URL = "https://openlibrary.org{author_key}.json"
 OPEN_LIBRARY_COVER_URL = "https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg"
@@ -15,9 +17,8 @@ async def lookup_isbn(isbn: str) -> BookLookupResult:
     """
     Estratégia:
     1. Verifica se já existe no cache (tabela `books` no Supabase).
-    2. Se não, consulta a Google Books API.
-    3. Se não encontrar, consulta a Open Library API.
-    4. Salva o resultado no cache para próximas consultas.
+    2. Se não, consulta a Open Library API.
+    3. Salva o resultado no cache para próximas consultas.
     """
     isbn = _normalize_isbn(isbn)
 
@@ -25,9 +26,7 @@ async def lookup_isbn(isbn: str) -> BookLookupResult:
     if cached:
         return cached
 
-    result = await _lookup_google_books(isbn)
-    if result is None:
-        result = await _lookup_open_library(isbn)
+    result = await _lookup_open_library(isbn)
 
     if result is None:
         return BookLookupResult(isbn=isbn, title="", found=False, source="none")
@@ -93,40 +92,6 @@ def _save_to_cache(result: BookLookupResult) -> None:
         pass
 
 
-async def _lookup_google_books(isbn: str) -> Optional[BookLookupResult]:
-    params = {"q": f"isbn:{isbn}"}
-    if settings.google_books_api_key:
-        params["key"] = settings.google_books_api_key
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        try:
-            response = await client.get(GOOGLE_BOOKS_URL, params=params)
-            response.raise_for_status()
-            data = response.json()
-        except (httpx.HTTPError, ValueError):
-            return None
-
-    items = data.get("items")
-    if not items:
-        return None
-
-    volume_info = items[0].get("volumeInfo", {})
-    image_links = volume_info.get("imageLinks", {})
-
-    return BookLookupResult(
-        isbn=isbn,
-        title=volume_info.get("title", "Título não encontrado"),
-        authors=volume_info.get("authors", []),
-        publisher=volume_info.get("publisher"),
-        published_date=volume_info.get("publishedDate"),
-        page_count=volume_info.get("pageCount"),
-        cover_url=image_links.get("thumbnail") or image_links.get("smallThumbnail"),
-        description=volume_info.get("description"),
-        source="google_books",
-        found=True,
-    )
-
-
 async def _lookup_open_library(isbn: str) -> Optional[BookLookupResult]:
     async with httpx.AsyncClient(timeout=10.0) as client:
         try:
@@ -135,8 +100,18 @@ async def _lookup_open_library(isbn: str) -> Optional[BookLookupResult]:
                 return None
             response.raise_for_status()
             data = response.json()
-        except (httpx.HTTPError, ValueError):
-            return None
+        except httpx.HTTPError as e:
+            logger.error("HTTP error fetching ISBN %s from Open Library: %s", isbn, e)
+            return BookLookupResult(
+                isbn=isbn, title="", found=False, source="open_library",
+                error_message=f"Erro HTTP ao consultar Open Library: {e}",
+            )
+        except ValueError as e:
+            logger.error("Invalid response for ISBN %s from Open Library: %s", isbn, e)
+            return BookLookupResult(
+                isbn=isbn, title="", found=False, source="open_library",
+                error_message=f"Resposta inválida da Open Library: {e}",
+            )
 
         authors = []
         for author_ref in data.get("authors", []):

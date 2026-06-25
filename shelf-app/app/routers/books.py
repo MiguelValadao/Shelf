@@ -12,12 +12,12 @@ async def get_book_by_isbn(
 ):
     """
     Busca os dados de um livro pelo ISBN.
-    Ordem de busca: cache (Supabase) -> Google Books -> Open Library.
+    Ordem de busca: cache (Supabase) -> Open Library.
     """
     result = await lookup_isbn(isbn)
     if not result.found:
-        raise HTTPException(
-            status_code=404,
-            detail="Livro não encontrado para este ISBN. Cadastre manualmente.",
-        )
+        detail = "Livro não encontrado para este ISBN. Cadastre manualmente."
+        if result.error_message:
+            detail = f"Não foi possível consultar o livro. {result.error_message}"
+        raise HTTPException(status_code=404, detail=detail)
     return result

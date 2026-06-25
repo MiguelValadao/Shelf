@@ -7,7 +7,7 @@ app = FastAPI(
     title="Shelf Clone - ISBN Lookup Service",
     description=(
         "Microserviço responsável apenas pela consulta de dados de livros "
-        "por ISBN (Google Books / Open Library), com cache no Supabase. "
+        "por ISBN (Open Library), com cache no Supabase. "
         "Todo o restante do CRUD é feito diretamente pelo Flutter no Supabase."
     ),
     version="1.0.0",

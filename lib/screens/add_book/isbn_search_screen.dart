@@ -28,18 +28,18 @@ class _IsbnSearchScreenState extends State<IsbnSearchScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      _showErrorModal();
+      _showErrorModal(e.toString());
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showErrorModal() {
+  void _showErrorModal(String message) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Atenção'),
-        content: const Text('Não foi possível encontrar o livro desejado.\nTente adicionar manualmente.'),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
