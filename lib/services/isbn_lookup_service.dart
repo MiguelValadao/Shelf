@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import '../config.dart';
 import '../models/book.dart';
 
 class IsbnLookupException implements Exception {
@@ -11,78 +12,56 @@ class IsbnLookupException implements Exception {
 }
 
 class IsbnLookupService {
-  static const _openLibraryUrl = 'https://openlibrary.org/isbn/{isbn}.json';
-  static const _authorUrl = 'https://openlibrary.org{author_key}.json';
-  static const _coverUrl = 'https://covers.openlibrary.org/b/isbn/{isbn}-L.jpg';
+  static const _googleBooksUrl =
+      'https://www.googleapis.com/books/v1/volumes?q=isbn:{isbn}&key={apiKey}';
 
-  /// Consulta a Open Library diretamente pelo ISBN (sem backend Python).
   Future<Book> lookup(String isbn) async {
     final cleanIsbn = isbn.replaceAll('-', '').replaceAll(' ', '').trim();
 
-    final bookData = await _fetchBookData(cleanIsbn);
-    if (bookData == null) {
+    final volumeInfo = await _fetchVolumeInfo(cleanIsbn);
+    if (volumeInfo == null) {
       throw IsbnLookupException('Livro não encontrado para o ISBN $cleanIsbn.');
     }
 
-    final authors = await _fetchAuthors(bookData);
+    final title = volumeInfo['title'] as String? ?? 'Título não encontrado';
 
-    final title = bookData['title'] as String? ?? 'Título não encontrado';
+    final authors = (volumeInfo['authors'] as List<dynamic>?)
+            ?.map((a) => a.toString())
+            .toList() ??
+        [];
 
-    var description = bookData['description'];
-    if (description is Map) {
-      description = description['value'] as String?;
-    }
+    final rawCover = volumeInfo['imageLinks'] as Map<String, dynamic>?;
+    final coverUrl = rawCover?['thumbnail'] as String?;
 
     return Book(
       isbn: cleanIsbn,
       title: title,
       authors: authors,
-      publisher: _parseList(bookData['publishers']),
-      publishedDate: bookData['publish_date'] as String?,
-      pageCount: bookData['number_of_pages'] as int?,
-      coverUrl: _coverUrl.replaceAll('{isbn}', cleanIsbn),
-      description: description as String?,
-      source: 'open_library',
+      publisher: volumeInfo['publisher'] as String?,
+      publishedDate: volumeInfo['publishedDate'] as String?,
+      pageCount: volumeInfo['pageCount'] as int?,
+      coverUrl: coverUrl,
+      description: volumeInfo['description'] as String?,
+      source: 'google_books',
     );
   }
 
-  Future<Map<String, dynamic>?> _fetchBookData(String isbn) async {
-    final uri = Uri.parse(_openLibraryUrl.replaceAll('{isbn}', isbn));
+  Future<Map<String, dynamic>?> _fetchVolumeInfo(String isbn) async {
+    final uri = Uri.parse(
+      _googleBooksUrl
+          .replaceAll('{isbn}', isbn)
+          .replaceAll('{apiKey}', AppConfig.googleBooksApiKey),
+    );
     try {
       final response = await http.get(uri).timeout(const Duration(seconds: 10));
-      if (response.statusCode == 404) return null;
       if (response.statusCode != 200) return null;
-      return jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final data = jsonDecode(utf8.decode(response.bodyBytes)) as Map<String, dynamic>;
+      final items = data['items'] as List<dynamic>?;
+      if (items == null || items.isEmpty) return null;
+      final first = items[0] as Map<String, dynamic>;
+      return first['volumeInfo'] as Map<String, dynamic>?;
     } catch (_) {
       return null;
     }
-  }
-
-  Future<List<String>> _fetchAuthors(Map<String, dynamic> bookData) async {
-    final authorRefs = bookData['authors'] as List<dynamic>?;
-    if (authorRefs == null || authorRefs.isEmpty) return [];
-
-    final names = <String>[];
-    for (final ref in authorRefs) {
-      final key = (ref as Map)['key'] as String?;
-      if (key == null) continue;
-      try {
-        final uri = Uri.parse(_authorUrl.replaceAll('{author_key}', key));
-        final response = await http.get(uri).timeout(const Duration(seconds: 5));
-        if (response.statusCode == 200) {
-          final authorData = jsonDecode(utf8.decode(response.bodyBytes));
-          final name = authorData['name'] as String?;
-          if (name != null && name.isNotEmpty) names.add(name);
-        }
-      } catch (_) {}
-    }
-    return names;
-  }
-
-  String? _parseList(dynamic value) {
-    if (value is List) {
-      return value.whereType<String>().join(', ');
-    }
-    return value as String?;
   }
 }
